@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E agora, o que fazer com meu dinheiro?</title>
+<meta name="description" content="Responda 5 perguntas e descubra o próximo passo para o seu dinheiro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F7FA; --card:#FFFFFF; --ink:#12233D; --muted:#5B6B80; --line:#D9E2EC;
+  --brand:#0B7A75; --brand-ink:#FFFFFF; --soft:#DDF2EF; --warn:#B45309; --warnbg:#FDF0DC;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:17px}
+main{max-width:620px;margin:0 auto;padding:28px 20px 56px}
+h1{font-size:clamp(1.9rem,7vw,2.6rem);line-height:1.12;letter-spacing:-.02em;font-weight:800;margin:8px 0 14px}
+h2{font-size:1.45rem;line-height:1.2;letter-spacing:-.01em;margin:0 0 10px}
+h3{font-size:1.05rem;margin:0 0 6px}
+p{margin:0 0 14px}
+.muted{color:var(--muted)}
+.btn{display:block;width:100%;text-align:left;font:inherit;font-weight:700;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 10px;cursor:pointer;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--brand);background:var(--soft)}
+.btn:focus-visible,summary:focus-visible,input:focus-visible,.link:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);text-align:center;font-size:1.05rem}
+.btn.primary:hover{background:#09665F}
+.link{background:none;border:0;font:inherit;color:var(--brand);font-weight:700;padding:8px 0;cursor:pointer;text-decoration:underline}
+.progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin:0 0 22px}
+.progress>i{display:block;height:100%;background:var(--brand);transition:width .25s}
+.step{font-size:.9rem;color:var(--muted);margin:0 0 6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:0 0 18px}
+.ladder{list-style:none;margin:0 0 22px;padding:0;display:grid;gap:8px}
+.ladder li{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--muted)}
+.ladder b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--line);color:var(--ink);font-size:.9rem;flex:none}
+.ladder li.done{opacity:.7}
+.ladder li.done b{background:var(--soft);color:var(--brand)}
+.ladder li.now{border-color:var(--brand);background:var(--soft);color:var(--ink);font-weight:800;padding:16px 14px}
+.ladder li.now b{background:var(--brand);color:#fff}
+.ladder small{display:block;font-weight:500;color:var(--muted)}
+.todo{margin:0;padding-left:20px}
+.todo li{margin:0 0 8px}
+.alert{background:var(--warnbg);color:#6B3A05;border-radius:12px;padding:14px 16px;margin:0 0 18px}
+label{display:flex;justify-content:space-between;font-weight:700;margin:14px 0 6px}
+input[type=range]{width:100%;accent-color:var(--brand)}
+.bars{margin:18px 0 6px}
+.bar{height:34px;border-radius:8px;display:flex;align-items:center;padding:0 12px;font-weight:700;font-size:.9rem;color:#fff;margin:0 0 8px;min-width:90px;white-space:nowrap;transition:width .25s}
+.bar.a{background:#5B6B80}.bar.b{background:var(--brand)}
+details{border-top:1px solid var(--line);padding:12px 0}
+summary{cursor:pointer;font-weight:700}
+details p{margin:8px 0 0;color:var(--muted)}
+.foot{font-size:.82rem;color:var(--muted);margin-top:28px}
+input[type=number]{width:100%;font:inherit;font-weight:700;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.out{margin:14px 0 0;padding:14px 16px;background:var(--soft);border-radius:12px}
+.out.bad{background:var(--warnbg);color:#6B3A05}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+
+<script>
+const fmt = v => v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+
+const QUESTIONS = [
+  {id:"budget", t:"Seus ganhos cobrem seus gastos no mês?", o:[["falta","Não, falta dinheiro"],["raspa","Fecha raspando"],["sobra","Sim, e ainda sobra"]]},
+  {id:"debt", t:"Você tem dívida com juros altos, como cartão rotativo ou cheque especial?", o:[["sim","Sim"],["naosei","Não tenho certeza"],["nao","Não"]]},
+  {id:"reserve", t:"Quanto você tem guardado para emergências?", o:[["0","Nada"],["1","Menos de 3 meses de gastos"],["3","3 meses de gastos ou mais"]]},
+  {id:"goal", t:"Para quando você pode precisar desse dinheiro?", o:[["curto","Em menos de 1 ano"],["medio","Entre 1 e 5 anos"],["longo","Daqui a mais de 5 anos"]]},
+  {id:"exp", t:"Você já investiu antes?", o:[["nunca","Nunca"],["pouco","Só poupança"],["sim","Sim, invisto com frequência"]]}
+];
+
+const STAGES = [
+  {name:"Organizar o básico", sub:"Saber para onde o dinheiro vai"},
+  {name:"Sair das dívidas caras", sub:"Cartão e cheque especial primeiro"},
+  {name:"Criar a reserva de emergência", sub:"3 a 6 meses de gastos essenciais"},
+  {name:"Fazer o dinheiro render", sub:"Investir de acordo com o prazo"}
+];
+
+const CONTENT = [
+  {lead:"Antes de qualquer investimento, o primeiro passo é enxergar suas entradas e saídas.",
+   steps:["Anote tudo que entra e tudo que sai neste mês, mesmo os gastos pequenos.","Separe o que é essencial (moradia, comida, transporte) do que pode esperar.","Escolha um gasto para cortar ou reduzir ainda este mês."]},
+  {lead:"Juros de cartão e cheque especial crescem mais rápido do que qualquer rendimento. Quitar essas dívidas é o melhor “investimento” agora.",
+   steps:["Liste cada dívida com valor, taxa de juros e vencimento. Se não souber a taxa, pergunte ao banco.","Comece pela dívida com a maior taxa e pague o mínimo nas outras.","Procure renegociar: muitas vezes dá para trocar uma dívida cara por outra mais barata."]},
+  {lead:"Sua dívida não é o problema agora. O que falta é uma proteção para imprevistos, para você não precisar se endividar de novo.",
+   steps:["Calcule seus gastos essenciais de um mês e multiplique por 3. Essa é sua primeira meta.","Guarde um valor fixo assim que o dinheiro entrar, antes de gastar com outras coisas.","Deixe a reserva em um lugar seguro e com saque rápido, sem risco de perder valor."]},
+  {lead:"Você já tem a base. Agora o que importa é combinar o investimento com o prazo do seu objetivo.",
+   steps:null}
+];
+
+const GOAL_STEPS = {
+  curto:["Seu prazo é curto: priorize segurança e acesso rápido ao dinheiro, mesmo que renda menos.","Evite produtos que oscilam, porque você pode precisar resgatar justamente quando estiverem em baixa.","Compare as opções de renda fixa com liquidez diária e veja o que cobram de taxa."],
+  medio:["Com prazo médio, dá para olhar renda fixa com vencimento próximo da data que você precisa do dinheiro.","Veja se o vencimento do produto bate com o seu objetivo, para não precisar resgatar antes.","Compare taxas e o imposto de cada opção antes de decidir."],
+  longo:["Com prazo longo, você pode aceitar mais oscilação em parte do dinheiro em troca de maior potencial.","Diversifique: não coloque tudo em um único tipo de investimento.","Invista todo mês, de forma constante, em vez de tentar acertar o melhor momento."]
+};
+
+const LESSONS = [
+  ["O que são juros compostos?","São juros que rendem sobre os juros anteriores. Por isso, quanto mais tempo o dinheiro fica, mais rápido ele cresce. O mesmo vale para as dívidas, só que ao contrário."],
+  ["O que é inflação?","É a alta geral dos preços. Se o seu dinheiro rende menos do que a inflação, ele compra menos coisas no futuro, mesmo que o saldo pareça crescer."],
+  ["Risco e retorno","Em geral, quem busca ganhar mais precisa aceitar a chance de perder ou de ver o valor oscilar. Não existe investimento sem algum tipo de trade-off."],
+  ["O que é liquidez?","É a facilidade de transformar o investimento em dinheiro. Liquidez diária significa poder sacar a qualquer momento. Quanto mais fácil o saque, menos costuma render."]
+];
+
+const app = document.getElementById("app");
+let answers = {}, idx = -1;
+
+function show(html){ app.innerHTML = html; window.scrollTo({top:0}); const h = app.querySelector("h1,h2"); if(h){h.setAttribute("tabindex","-1"); h.focus({preventScroll:true});} }
+
+function intro(){
+  idx = -1; answers = {};
+  show(`
+    <p class="muted" style="margin:0">Orientação financeira</p>
+    <h1>Sem saber o que fazer com seu dinheiro?</h1>
+    <p>Responda 5 perguntas rápidas. No final, você vê em qual etapa está e qual é o seu próximo passo.</p>
+    <button class="btn primary" id="go">Começar</button>
+    <p class="foot">Conteúdo educativo. Não é recomendação de investimento. Nenhuma resposta é salva.</p>`);
+  document.getElementById("go").onclick = () => question(0);
+}
+
+function question(i){
+  idx = i; const q = QUESTIONS[i];
+  show(`
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${QUESTIONS.length}" aria-valuenow="${i}"><i style="width:${(i/QUESTIONS.length)*100}%"></i></div>
+    <p class="step">Pergunta ${i+1} de ${QUESTIONS.length}</p>
+    <h2>${q.t}</h2>
+    ${q.o.map(([v,l]) => `<button class="btn" data-v="${v}">${l}</button>`).join("")}
+    ${i>0 ? `<button class="link" id="back">Voltar</button>` : ""}`);
+  app.querySelectorAll("[data-v]").forEach(b => b.onclick = () => { answers[q.id] = b.dataset.v; i+1 < QUESTIONS.length ? question(i+1) : result(); });
+  const back = document.getElementById("back"); if(back) back.onclick = () => question(i-1);
+}
+
+function stageOf(a){
+  if(a.budget === "falta") return 0;
+  if(a.debt === "sim" || a.debt === "naosei") return 1;
+  if(a.reserve !== "3") return 2;
+  return 3;
+}
+
+function result(){
+  const s = stageOf(answers), c = CONTENT[s];
+  const steps = c.steps || GOAL_STEPS[answers.goal];
+  const ladder = STAGES.map((st,i) => `<li class="${i<s?"done":i===s?"now":""}"><b>${i<s?"✓":i+1}</b><span>${st.name}<small>${st.sub}</small></span></li>`).join("");
+  const hint = answers.exp === "nunca" ? `<p class="muted">Você disse que nunca investiu. Tudo bem: comece com valores pequenos e aprenda no caminho.</p>` : "";
+  const debtNote = answers.debt === "naosei" && s === 1 ? `<div class="alert">Você não tem certeza se tem dívida cara. Vale conferir no app do banco as taxas do seu cartão e do limite do cheque especial.</div>` : "";
+  const debtFact = s === 1 ? `<div class="alert"><b>Veja o tamanho do problema:</b> com juros de 12% ao mês, uma dívida de ${fmt(1000)} vira cerca de ${fmt(1000*Math.pow(1.12,12))} em um ano se ninguém pagar nada.</div>` : "";
+  show(`
+    <p class="muted" style="margin:0">Seu resultado</p>
+    <h1>Seu próximo passo: ${STAGES[s].name.toLowerCase()}</h1>
+    <p>${c.lead}</p>
+    ${hint}
+    <ol class="ladder" aria-label="Suas etapas">${ladder}</ol>
+    ${debtNote}${debtFact}
+    <div class="panel"><h3>O que fazer agora</h3><ul class="todo">${steps.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+    ${tools(s)}${s >= 2 ? simulator() : ""}
+    <div class="panel"><h3>Conceitos rápidos</h3>${LESSONS.map(([t,d])=>`<details><summary>${t}</summary><p>${d}</p></details>`).join("")}</div>
+    <button class="btn" id="again">Refazer as perguntas</button>
+    <p class="foot">Conteúdo educativo, sem recomendação de produtos específicos. Cada situação é única: em caso de dúvida, converse com um profissional.</p>`);
+  document.getElementById("again").onclick = intro;
+  wireTools(s); if(s >= 2) wireSim();
+}
+
+function simulator(){
+  return `<div class="panel"><h3>O que o tempo faz pelo seu dinheiro</h3>
+    <p class="muted">Simule guardar um valor todo mês. A taxa é só um exemplo e pode ser mudada.</p>
+    <label for="m">Por mês <span id="mv"></span></label><input id="m" type="range" min="50" max="2000" step="50" value="200">
+    <label for="y">Tempo <span id="yv"></span></label><input id="y" type="range" min="1" max="20" step="1" value="5">
+    <label for="r">Rendimento ao ano (exemplo) <span id="rv"></span></label><input id="r" type="range" min="2" max="15" step="1" value="8">
+    <div class="bars"><div class="bar a" id="ba"></div><div class="bar b" id="bb"></div></div>
+    <p id="sum" style="margin:0"></p></div>`;
+}
+
+function wireSim(){
+  const $ = id => document.getElementById(id);
+  const calc = () => {
+    const m = +$("m").value, y = +$("y").value, r = +$("r").value/100;
+    const i = Math.pow(1+r,1/12)-1, n = y*12;
+    const total = m*n, fv = m*((Math.pow(1+i,n)-1)/i);
+    $("mv").textContent = fmt(m); $("yv").textContent = y + (y===1?" ano":" anos"); $("rv").textContent = (r*100).toFixed(0) + "%";
+    $("ba").style.width = (total/fv*100) + "%"; $("ba").textContent = "Você guardou " + fmt(total);
+    $("bb").style.width = "100%"; $("bb").textContent = "Total: " + fmt(fv);
+    $("sum").textContent = "Os juros adicionaram cerca de " + fmt(fv-total) + " ao que você guardou.";
+  };
+  ["m","y","r"].forEach(id => $(id).addEventListener("input", calc)); calc();
+}
+
+const num = (id) => Math.max(0, +document.getElementById(id).value || 0);
+const bind = (ids, fn) => { ids.forEach(id => document.getElementById(id).addEventListener("input", fn)); fn(); };
+
+function tools(s){
+  if(s === 0) return `<div class="panel"><h3>Divida sua renda</h3>
+    <p class="muted">Um ponto de partida: necessidades, desejos e futuro. Ajuste ao seu caso.</p>
+    <label for="inc">Renda mensal líquida</label><input id="inc" type="number" inputmode="decimal" min="0" step="50" value="3000">
+    <label for="np">Necessidades <span id="npv"></span></label><input id="np" type="range" min="30" max="80" value="50">
+    <label for="wp">Desejos <span id="wpv"></span></label><input id="wp" type="range" min="0" max="50" value="30">
+    <div class="out" id="bout"></div></div>`;
+  if(s === 1) return `<div class="panel"><h3>Em quanto tempo você quita?</h3>
+    <p class="muted">Informe o saldo, os juros e quanto consegue pagar por mês.</p>
+    <label for="bal">Saldo da dívida</label><input id="bal" type="number" inputmode="decimal" min="0" step="100" value="3000">
+    <label for="rt">Juros ao mês <span id="rtv"></span></label><input id="rt" type="range" min="1" max="20" value="12">
+    <label for="pay">Pagamento mensal</label><input id="pay" type="number" inputmode="decimal" min="0" step="50" value="400">
+    <div class="out" id="dout"></div></div>`;
+  if(s === 2) return `<div class="panel"><h3>Quanto falta para sua reserva?</h3>
+    <p class="muted">Use só seus gastos essenciais: moradia, comida, transporte, saúde e contas básicas.</p>
+    <label for="ex">Gastos essenciais por mês</label><input id="ex" type="number" inputmode="decimal" min="0" step="50" value="2000">
+    <label for="mo">Meta em meses de gastos <span id="mov"></span></label><input id="mo" type="range" min="3" max="12" value="3">
+    <label for="sv">Já guardado</label><input id="sv" type="number" inputmode="decimal" min="0" step="50" value="0">
+    <label for="ms">Quanto guarda por mês</label><input id="ms" type="number" inputmode="decimal" min="0" step="50" value="200">
+    <div class="out" id="rout"></div></div>`;
+  return "";
+}
+
+function wireTools(s){
+  const $ = id => document.getElementById(id), put = (id, h, bad) => { $(id).innerHTML = h; $(id).classList.toggle("bad", !!bad); };
+  if(s === 0) bind(["inc","np","wp"], () => {
+    const i = num("inc"), n = +$("np").value, w = +$("wp").value, f = 100 - n - w;
+    $("npv").textContent = n + "%"; $("wpv").textContent = w + "%";
+    if(f < 0) return put("bout", "Necessidades e desejos passam de 100%. Reduza um deles.", true);
+    put("bout", `Necessidades: <b>${fmt(i*n/100)}</b><br>Desejos: <b>${fmt(i*w/100)}</b><br>Futuro (${f}%): <b>${fmt(i*f/100)}</b>` + (n > 60 ? `<br><br>Se as necessidades passam de 60%, o foco é reduzir custos fixos antes de pensar em guardar.` : ""));
+  });
+  if(s === 1) bind(["bal","rt","pay"], () => {
+    const b = num("bal"), r = +$("rt").value/100, p = num("pay");
+    $("rtv").textContent = (r*100) + "%";
+    if(b === 0) return put("dout", "Sem dívida, sem problema.");
+    if(p <= b*r) return put("dout", `Com esse pagamento, a dívida não diminui: só os juros do mês já são ${fmt(b*r)}. Aumente o valor ou renegocie a taxa.`, true);
+    const n = Math.ceil(-Math.log(1 - b*r/p) / Math.log(1 + r)), tot = n*p;
+    put("dout", `Você quita em cerca de <b>${n} ${n === 1 ? "mês" : "meses"}</b>.<br>Vai pagar ${fmt(tot)} no total, sendo <b>${fmt(tot-b)}</b> só de juros.`);
+  });
+  if(s === 2) bind(["ex","mo","sv","ms"], () => {
+    const e = num("ex"), k = +$("mo").value, v = num("sv"), m = num("ms"), meta = e*k, falta = Math.max(0, meta-v);
+    $("mov").textContent = k + " meses";
+    if(falta === 0) return put("rout", `Meta de <b>${fmt(meta)}</b> atingida. Você já pode seguir para a próxima etapa.`);
+    if(m === 0) return put("rout", `Sua meta é <b>${fmt(meta)}</b> e faltam ${fmt(falta)}. Informe quanto consegue guardar por mês.`, true);
+    const n = Math.ceil(falta/m);
+    put("rout", `Meta: <b>${fmt(meta)}</b>. Faltam ${fmt(falta)}.<br>Guardando ${fmt(m)} por mês, você chega lá em <b>${n >= 12 ? Math.floor(n/12) + " ano(s) e " + (n%12) + " mês(es)" : n + " mês(es)"}</b>.`);
+  });
+}
+
+intro();
+</script>
+</body>
+</html>
